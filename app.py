@@ -1,6 +1,5 @@
 import streamlit as st
 from PIL import Image
-from byaldi import RAGMultiModalModel
 from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import torch
