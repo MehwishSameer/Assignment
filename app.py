@@ -14,18 +14,20 @@ uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "p
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Image", use_column_width=True)  
-
+    print("20% DONE")
     # Load Qwen-2VL model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = Qwen2VLForConditionalGeneration.from_pretrained(
         "Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True, torch_dtype=torch.bfloat16
     ).to(device).eval()
+    print("50% DONE")
 
     # Define text query
     text_query = "Extract both the hindi and english text. Ignore bounding boxes. Do not return any coordinates, only return plain text."
 
     # Initialize processor
     processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True)
+    print("70% DONE")
     
     # Generate inputs and outputs
     messages = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": text_query}]}]
@@ -36,14 +38,14 @@ if uploaded_file is not None:
     inputs = {key: value.to(device) for key, value in inputs.items()}
     
     generated_ids = model.generate(**inputs, max_new_tokens=6144)
-    
+    print("90% DONE")
     # Decode the generated output
     generated_ids_trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs['input_ids'], generated_ids)]
     output_text = processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
     
     # Convert '\n' to spaces
     formatted_text = ' '.join(output_text).replace('\n', ' ')
-    
+    print("100% DONE")
     st.write("Extracted Text:", formatted_text)
 
     # Keyword search functionality
