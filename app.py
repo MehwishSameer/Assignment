@@ -43,7 +43,7 @@ if uploaded_file is not None:
     ocr_start_time = time.time()
 
     # Define text query
-    text_query = "Extract both the hindi and english text. Ignore bounding boxes. Do not return any coordinates, only return plain text."
+    text_query = "Extract both the hindi and english text but don't explicitly tag it as english or hindi. Ignore bounding boxes. Do not return any coordinates, only return plain text."
 
     # Generate inputs and outputs
     messages = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": text_query}]}]
@@ -53,7 +53,7 @@ if uploaded_file is not None:
     inputs = processor(text=[text], images=image_inputs, padding=True, return_tensors="pt")
     inputs = {key: value.to(device) for key, value in inputs.items()}
 
-    generated_ids = model.generate(**inputs, max_new_tokens=2144)
+    generated_ids = model.generate(**inputs, max_new_tokens=500)
 
     # Decode the generated output
     generated_ids_trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs['input_ids'], generated_ids)]
