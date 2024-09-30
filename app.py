@@ -3,9 +3,24 @@ from PIL import Image
 from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import torch
+import time  # For time measurement
+import re  # For keyword search and highlighting
 
 # Title of the web application
 st.title("OCR and Document Search Web Application Prototype")
+
+# Time measurement for loading the model and processor
+load_model_start_time = time.time()
+
+# Non-cached loading of the model and processor
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = Qwen2VLForConditionalGeneration.from_pretrained(
+    "Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True, torch_dtype=torch.bfloat16
+).to(device).eval()
+processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True)
+
+load_model_end_time = time.time()
+st.write(f"Model loading time without cache: {load_model_end_time - load_model_start_time:.2f} seconds")
 
 # Initialize session state for storing extracted text
 if "extracted_text" not in st.session_state:
@@ -19,17 +34,8 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Image", use_column_width=True)
     
-    # Load the model (cached so it doesn't reload each time)
-    @st.cache_resource
-    def load_model():
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = Qwen2VLForConditionalGeneration.from_pretrained(
-            "Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True, torch_dtype=torch.bfloat16
-        ).to(device).eval()
-        processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True)
-        return model, processor, device
-
-    model, processor, device = load_model()
+    # Time measurement for OCR extraction
+    ocr_start_time = time.time()
 
     # Define text query
     text_query = "Extract both the hindi and english text. Ignore bounding boxes. Do not return any coordinates, only return plain text."
@@ -52,11 +58,28 @@ if uploaded_file is not None:
     st.session_state.extracted_text = ' '.join(output_text).replace('\n', ' ')
     st.write("Extracted Text:", st.session_state.extracted_text)
 
+    ocr_end_time = time.time()
+    st.write(f"OCR processing time: {ocr_end_time - ocr_start_time:.2f} seconds")
+
 # Keyword search functionality
 keyword = st.text_input("Enter a keyword to search within the text")
+
+# Function to highlight the searched keyword in the text
+def highlight_keywords(text, keyword):
+    highlighted_text = re.sub(f"({re.escape(keyword)})", r"<mark>\1</mark>", text, flags=re.IGNORECASE)
+    return highlighted_text
+
 if keyword:
-    # Make keyword search case-insensitive
+    # Time measurement for keyword search
+    search_start_time = time.time()
+
+    # If the keyword is in the extracted text, highlight it
     if keyword.lower() in st.session_state.extracted_text.lower():
-        st.write(f"Keyword '{keyword}' found in the text.")
+        highlighted_text = highlight_keywords(st.session_state.extracted_text, keyword)
+        st.markdown(f"Extracted Text with '{keyword}' highlighted:", unsafe_allow_html=True)
+        st.markdown(f"<div style='white-space: pre-wrap;'>{highlighted_text}</div>", unsafe_allow_html=True)
     else:
         st.write(f"Keyword '{keyword}' not found in the text.")
+
+    search_end_time = time.time()
+    st.write(f"Keyword search time: {search_end_time - search_start_time:.2f} seconds")
