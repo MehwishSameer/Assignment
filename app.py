@@ -53,7 +53,7 @@ if uploaded_file is not None:
     inputs = processor(text=[text], images=image_inputs, padding=True, return_tensors="pt")
     inputs = {key: value.to(device) for key, value in inputs.items()}
 
-    generated_ids = model.generate(**inputs, max_new_tokens=6144)
+    generated_ids = model.generate(**inputs, max_new_tokens=2144)
 
     # Decode the generated output
     generated_ids_trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs['input_ids'], generated_ids)]
