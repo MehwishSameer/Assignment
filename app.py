@@ -43,7 +43,7 @@ if uploaded_file is not None:
     ocr_start_time = time.time()
 
     # Define text query
-    text_query = "Extract both the hindi and english text but don't explicitly tag it as english or hindi. Ignore bounding boxes. Do not return any coordinates, only return plain text."
+    text_query = "Extract both the hindi and english entire text but don't explicitly tag it as english or hindi. Ignore bounding boxes. Do not return any coordinates, only return plain text."
 
     # Generate inputs and outputs
     messages = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": text_query}]}]
