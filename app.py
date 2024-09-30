@@ -17,7 +17,7 @@ load_model_start_time = time.time()
 def load_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = Qwen2VLForConditionalGeneration.from_pretrained(
-        "Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True, torch_dtype=torch.float32
+        "Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True, torch_dtype=torch.bfloat16
     ).to(device).eval()
     processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True)
     return model, processor, device
