@@ -12,15 +12,20 @@ st.title("OCR and Document Search Web Application Prototype")
 # Time measurement for loading the model and processor
 load_model_start_time = time.time()
 
-# Non-cached loading of the model and processor
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = Qwen2VLForConditionalGeneration.from_pretrained(
-    "Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True, torch_dtype=torch.bfloat16
-).to(device).eval()
-processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True)
+# Cached loading of the model and processor
+@st.cache_resource
+def load_model():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = Qwen2VLForConditionalGeneration.from_pretrained(
+        "Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True, torch_dtype=torch.bfloat16
+    ).to(device).eval()
+    processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-2B-Instruct", trust_remote_code=True)
+    return model, processor, device
+
+model, processor, device = load_model()
 
 load_model_end_time = time.time()
-st.write(f"Model loading time without cache: {load_model_end_time - load_model_start_time:.2f} seconds")
+st.write(f"Model loading time with cache: {load_model_end_time - load_model_start_time:.2f} seconds")
 
 # Initialize session state for storing extracted text
 if "extracted_text" not in st.session_state:
